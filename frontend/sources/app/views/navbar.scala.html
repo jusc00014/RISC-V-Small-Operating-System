@@ -1,0 +1,36 @@
+<nav class="navbar navbar-light bg-light">
+    <div class="container-fluid">
+      <div class="btn-group ms-right" role="group" aria-label="Controls">
+        <button type="button" class="btn btn-outline-dark" id="Upload"><i class="bi-arrow-up"></i> Upload</button>
+        <button type="button" class="btn btn-outline-dark" id="Restart"><i class="bi-arrow-clockwise"></i> Restart</button>
+      </div>
+      
+      <input type="file" id="configInput" style="display: none;" accept=".json">
+      <div>
+        
+        <div class="input-group">
+          <button type="button" class="btn btn-outline-dark" id="Step"><i class="bi-play-circle"></i> Step</button>
+            <input type="number" class="form-control run-button run-button-input" placeholder="Cycles" id="cycle-input" value="100">
+            <div class="input-group-append run-button">
+                <span class="input-group-text"> cycles </span>
+            </div>
+            <input type="number" class="form-control run-button run-button-input" placeholder="Delay (ms)" id="delay-input" value="0">
+            <div class="input-group-append run-button">
+                <span class="input-group-text"> ms delay </span>
+            </div>
+          <button type="button" class="btn btn-outline-dark run-button" id="Run"><i class="bi-play-circle"></i> Run</button>
+        </div>
+      </div>
+      <div>
+        <div class="counter">
+          <span id="state-counter" class="counter-span"></span>
+        </div>
+        <div class="btn-group ms-right" role="group" aria-label="Controls">
+          <button type="button" class="btn btn-outline-dark" id="AllBack"><i class="bi-skip-start"></i></button>
+          <button type="button" class="btn btn-outline-dark" id="Back"><i class="bi-arrow-left"></i></button>
+          <button type="button" class="btn btn-outline-dark" id="Forward"><i class="bi-arrow-right"></i></button>
+          <button type="button" class="btn btn-outline-dark" id="AllForward"><i class="bi-skip-end"></i></button>
+        </div>
+      </div> 
+    </div>
+  </nav>
