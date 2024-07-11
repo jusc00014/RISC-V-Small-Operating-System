@@ -1,0 +1,4 @@
+[debug] [sysarch2-test] Classpath dependencies List()
+[debug] [sysarch2-test] Dependencies from configurations List(sysarch2)
+[debug] Bloop wrote the configuration of project 'sysarch2-test' to '/home/julia/sysarch2/.bloop/sysarch2-test.json'
+[success] Generated .bloop/sysarch2-test.json
