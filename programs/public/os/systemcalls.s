@@ -75,4 +75,4 @@ restore_registers:
     lw a1, 20(sp)                   # restore a1
     lw a7, 24(sp)                   # restore a7
     addi sp, sp, 32                 # restore stack pointer
-    mret                            # return to user mode
+    mret     

@@ -130,7 +130,7 @@ update_timer:
     la a3 mtime                     # read off the current time
     lw a4, 0(a3)
     lw a1, 4(a3)
-    addi a0, a4, 300             # the new cmp-value is the current time plus 300 (this will give a little less than 300 cycles because we take time to set the value)
+    addi a0, a4, 400                # the new cmp-value is the current time plus 320 (this will give a little less than 300 cycles because we take time to set the value)
     bge a0, a4, incrementcmp        # if no overflow in the lower bits of mtime occured continue incermenting the mtimecmp
     addi a1, a1, 1
 incrementcmp:                       #increment the new comparison-value

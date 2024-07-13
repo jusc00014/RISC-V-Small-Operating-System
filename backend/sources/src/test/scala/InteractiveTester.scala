@@ -59,10 +59,10 @@ class InteractiveTester extends AnyFlatSpec with ChiselScalatestTester with Matc
     def clockStep(dut: MachineModeCoreTop, state: State, config: Config) = {
         dut.clock.step()
         if ((1L << 32) - state.getMemoryValue(config.mtime) < 1) {
-            state.addMemoryUpdate(Map(config.mtime -> new ValueUpdate(state.getMemoryValue(config.mtime), 0)))
-            state.addMemoryUpdate(Map(config.mtimeh -> new ValueUpdate(state.getMemoryValue(config.mtimeh), state.getMemoryValue(config.mtimeh) + 1)))
+            state.addMemoryUpdate(Map(config.mtime -> new ValueUpdate(state.getMemoryValue(config.mtime, true), 0)))
+            state.addMemoryUpdate(Map(config.mtimeh -> new ValueUpdate(state.getMemoryValue(config.mtimeh, true), state.getMemoryValue(config.mtimeh, true) + 1)))
         } else {
-            state.addMemoryUpdate(Map(config.mtime -> new ValueUpdate(state.getMemoryValue(config.mtime), state.getMemoryValue(config.mtime) + 1)))
+            state.addMemoryUpdate(Map(config.mtime -> new ValueUpdate(state.getMemoryValue(config.mtime, true), state.getMemoryValue(config.mtime, true) + 1)))
         }
     }
 

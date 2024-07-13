@@ -46,9 +46,9 @@ case class State(
 
     def getMemoryValue(address: BigInt, includePending: Boolean = false): BigInt = {
         if (includePending && !pendingUpdate.isEmpty) {
-            pendingUpdate.get.getMemoryValue(address).getOrElse(getMemoryValue(address, false))
+            return pendingUpdate.get.getMemoryValue(address).getOrElse(getMemoryValue(address, false))
         }
-        updates.map(u => u.getMemoryValue(address)).findLast(u => !u.isEmpty).getOrElse(initialState.getMemoryValue(address)).getOrElse(BigInt(0))
+        return updates.map(u => u.getMemoryValue(address)).findLast(u => !u.isEmpty).getOrElse(initialState.getMemoryValue(address)).getOrElse(BigInt(0))
     }
 
     def getRegisterValue(address: Int): BigInt = {

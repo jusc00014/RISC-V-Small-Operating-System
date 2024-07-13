@@ -3192,7 +3192,7 @@ module MachineModeCore(clock, reset, io_reset_rst_n, io_reset_boot_addr, io_inst
   assign _0569_ = io_reset_rst_n &  _0571_;
   assign _0570_ = \executionUnits_0.csrs_9_2._GEN  ?  \executionUnits_0.csrs_9_2.io_w_data [7] : \executionUnits_0.csrs_9_2.mtip ;
   assign _0571_ = \executionUnits_0.csrs_9_2._GEN  ?  \executionUnits_0.csrs_9_2.io_w_data [11] : \executionUnits_0.csrs_9_2.meip ;
-  assign _0572_ = \executionUnits_0.csrs_9_2._GEN  ?  { \executionUnits_0.csrs_9_2.io_w_data [11], 3'h0, \executionUnits_0.csrs_9_2.io_w_data [7], 3'h0, \executionUnits_0.csrs_9_2.mtip , 3'h0 } : { \executionUnits_0.csrs_9_2.meip , 3'h0, \executionUnits_0.csrs_9_2.mtip , 7'h00 };
+  assign _0572_ = \executionUnits_0.csrs_9_2._GEN  ?  { \executionUnits_0.csrs_9_2.io_w_data [11], 3'h0, \executionUnits_0.csrs_9_2.io_w_data [7], 7'h0 } : { \executionUnits_0.csrs_9_2.meip , 3'h0, \executionUnits_0.csrs_9_2.mtip , 7'h00 };
   assign csr_rvfi_14_2_wdata = io_reset_rst_n ?  { 20'h00000, _0572_ } : 32'd0;
   assign _0584_ = !  instruction[31:20];
   assign _0585_ = instruction[31:20] ==  12'h001;
@@ -4408,7 +4408,7 @@ module MachineModeCore(clock, reset, io_reset_rst_n, io_reset_boot_addr, io_inst
   assign io_rvfi_rvfi_ixl = 2'h0;
   assign io_rvfi_rvfi_pc_rdata = \pc.pc ;
   assign io_rvfi_rvfi_pc_wdata = io_instr_instr_addr;
-  assign io_rvfi_rvfi_rd_addr = \register_file.io_reg_rd ;
+  assign io_rvfi_rvfi_rd_addr = \register_file.io_reg_write_en ? \register_file.io_reg_rd : 5'h0;
   assign io_rvfi_rvfi_rd_addr_0 = \register_file.io_reg_rd ;
   assign io_rvfi_rvfi_rs1_addr_0 = io_rvfi_rvfi_rs1_addr;
   assign io_rvfi_rvfi_rs1_rdata = \executionUnits_0.io_reg_reg_read_data1 ;
