@@ -29,7 +29,7 @@ exception_handler:
     sw t1, 4(sp)
     sw ra, 8(sp)
     csrr t1, mscratch
-    li t0, 0                        # set mip to 128 => timer interrupt is expected soon
+    li t0, 0                        # set mip to 0 => no timer interrupt while syscall is handled
     csrw mip, t0
     beqz t1, first
 second:                             # When the second process was running
@@ -121,9 +121,13 @@ restore:                             # Restore all the registers of the next pro
     lw x14, 56(t1)
     lw x5, 20(t1)
     lw x6, 24(t1)
+    addi sp, sp, -4
+    sw x5, 0(sp)
     mret
     li t0, 128                      # set mip to 128 => timer interrupt is expected soon
     csrw mip, t0
+    lw t0, 0(sp)
+    addi sp, sp, 4
     
 update_timer:
 # Set the timer-interrupt
