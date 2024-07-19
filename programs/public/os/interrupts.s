@@ -1,18 +1,10 @@
-# Constants
-.equ BUFFER_SIZE, 16
-.equ BUFFER_ADDR, 0x00         # Starting address for the circular buffer
-.equ HEAD_ADDR, BUFFER_ADDR + BUFFER_SIZE
-.equ TAIL_ADDR, HEAD_ADDR + 4
-
-# Text section
 .text
-.globl _start
 _start:
     # Set up exception handler
     la t0, exception_handler       # Load the address of the exception handler
     csrw mtvec, t0                 # Set mtvec to the exception handler address
 
-    # Set up mepc to point to the first instruction of the fibonacci function
+    # Set up mepc to point to the first instruction of the Fibonacci function
     la t0, fibonacci               # Load the address of the Fibonacci function
     csrw mepc, t0                  # Set mepc to point to the Fibonacci function
 
@@ -34,13 +26,14 @@ _start:
     ori t0, t0, 0x2                # Set interrupt enable bit (bit 1)
     sw t0, 0(t1)                   # Store modified value back
 
-    # Initialize data structure to buffer keyboard inputs
-    la t0, BUFFER_ADDR             # Initialize circular buffer at fixed address
-    li t1, 0
-    sw t1, HEAD_ADDR               # Initialize head pointer
-    sw t1, TAIL_ADDR               # Initialize tail pointer
+    # Initialize memory for circular buffer and pointers
+    li t1, 0                       # Initialize head and tail pointers to 0
+    li t0, 0x0000007f              # Full 32-bit address for head pointer
+    sw t1, 0(t0)                   # Store head pointer at 0x0000007f
+    li t0, 0x00000083              # Full 32-bit address for tail pointer
+    sw t1, 0(t0)                   # Store tail pointer at 0x00000083
 
-    # Execute the fibonacci function until you get an interrupt
+    # Execute the Fibonacci function until an interrupt occurs
     mret                           # Return to user mode to start Fibonacci computation
 
 exception_handler:
@@ -57,16 +50,26 @@ exception_handler:
     sw t0, 28(sp)                  # Save mepc
 
     # Check if the cause of the exception is an interrupt
+    li t1, 0x80000000              # Create a bitmask with a 1 on the 31st bit
     csrr t0, mcause                # Read mcause to t0
-    bgez t0, handle_interrupt      # Check if the cause is an interrupt
+    and t2, t0, t1                 # Mask mcause with the bitmask
+    beq t2, t1, handle_interrupt   # If the result matches the bitmask, it's an interrupt
 
     j restore_registers            # Restore registers if not an interrupt
 
 handle_interrupt:
-    li t1, 0x800
-    and t1, t0, t1                 # Mask to check for external interrupt, t0 contains the mcause register data
-    beqz t1, restore_registers
+    csrr t0, mip                   # Read mip to t0
+    li t1, 0x800                   # External interrupt pending bitmask
+    and t2, t0, t1                 # Mask mip with the external interrupt bitmask
+    bnez t2, handle_external_interrupt
 
+    li t1, 0x80                    # Timer interrupt pending bitmask
+    and t2, t0, t1                 # Mask mip with the timer interrupt bitmask
+    bnez t2, handle_timer_interrupt
+
+    j restore_registers
+
+handle_external_interrupt:
     # Check which device is ready and handle the interrupt
     la t1, keyboard_ready
     lw t2, 0(t1)                   # Check if keyboard is ready
@@ -78,27 +81,38 @@ handle_interrupt:
     andi t2, t2, 1
     bnez t2, handle_display
 
-    j restore_registers
+    j update_mepc
+
+handle_timer_interrupt:
+    # Clear the timer interrupt bit in mip
+    li t1, 0x80                    # Timer interrupt bitmask
+    csrrc x0, mip, t1              # Clear the timer interrupt pending bit
+
+    j update_mepc
 
 handle_keyboard:
     la t1, keyboard_data
     lw t2, 0(t1)                   # Read character from keyboard
 
-    lw t3, HEAD_ADDR               # Load head pointer
-    lw t4, TAIL_ADDR               # Load tail pointer
+    li t0, 0x0000007f              # Full 32-bit address for head pointer
+    lw t3, 0(t0)                   # Load head pointer
+    li t0, 0x00000083              # Full 32-bit address for tail pointer
+    lw t4, 0(t0)                   # Load tail pointer
 
     addi t5, t3, 1
-    rem t5, t5, BUFFER_SIZE        # Compute new head pointer (circular buffer)
+    li t6, 16                      # Buffer size
+    rem t5, t5, t6                 # Compute new head pointer (circular buffer)
 
     beq t5, t4, buffer_full        # Check if buffer is full
-    li t1, BUFFER_ADDR
-    add t1, t1, t3
-    sb t2, 0(t1)                   # Store character in buffer
+    li t0, 0x00000087              # Start address of the buffer
+    add t0, t0, t3
+    sb t2, 0(t0)                   # Store character in buffer at (0x87 + head)
 
-    sw t5, HEAD_ADDR               # Update head pointer
+    li t0, 0x0000007f              # Full 32-bit address for head pointer
+    sw t5, 0(t0)                   # Update head pointer
 
 buffer_full:
-    # After handling the interrupt, it may be useful to check if keyboard or display are still or again ready
+    # Check if keyboard or display are still or again ready
     la t1, keyboard_ready
     lw t2, 0(t1)                   # Check if keyboard is still or again ready
     andi t2, t2, 1
@@ -109,27 +123,35 @@ buffer_full:
     andi t2, t2, 1
     bnez t2, handle_display
 
+    # Clear the external interrupt bit in mip
+    li t1, 0x800                   # External interrupt bitmask
+    csrrc x0, mip, t1              # Clear the external interrupt pending bit
+
     j update_mepc
 
 handle_display:
-    lw t3, HEAD_ADDR               # Load head pointer
-    lw t4, TAIL_ADDR               # Load tail pointer
+    li t0, 0x0000007f              # Full 32-bit address for head pointer
+    lw t3, 0(t0)                   # Load head pointer
+    li t0, 0x00000083              # Full 32-bit address for tail pointer
+    lw t4, 0(t0)                   # Load tail pointer
 
     beq t3, t4, buffer_empty       # Check if buffer is empty
 
-    li t1, BUFFER_ADDR
-    add t1, t1, t4
-    lb t2, 0(t1)                   # Load character from buffer
+    li t0, 0x00000087              # Start address of the buffer
+    add t0, t0, t4
+    lb t2, 0(t0)                   # Load character from buffer at (0x87 + tail)
     la t1, display_data
     sb t2, 0(t1)                   # Write character to display
 
     addi t4, t4, 1
-    rem t4, t4, BUFFER_SIZE        # Compute new tail pointer (circular buffer)
+    li t6, 16                      # Buffer size
+    rem t4, t4, t6                 # Compute new tail pointer (circular buffer)
 
-    sw t4, TAIL_ADDR               # Update tail pointer
+    li t0, 0x00000083              # Full 32-bit address for tail pointer
+    sw t4, 0(t0)                   # Update tail pointer
 
 buffer_empty:
-    # After handling the interrupt, it may be useful to check if keyboard or display are still or again ready
+    # Check if keyboard or display are still or again ready
     la t1, keyboard_ready
     lw t2, 0(t1)                   # Check if keyboard is still or again ready
     andi t2, t2, 1
@@ -140,21 +162,25 @@ buffer_empty:
     andi t2, t2, 1
     bnez t2, handle_display
 
+    # Clear the external interrupt bit in mip
+    li t1, 0x800                   # External interrupt bitmask
+    csrrc x0, mip, t1              # Clear the external interrupt pending bit
+
     j update_mepc
 
 update_mepc:
     j restore_registers
 
-# Restore registers and return to user mode (to continue fibonacci computation)
+# Restore registers and return to user mode (to continue Fibonacci computation)
 restore_registers:
-    lw t0, 28(sp)                  # Restore mepc
+    lw t0, 28(sp)                 # Restore mepc
     csrw mepc, t0
-    lw ra, 0(sp)                   # Restore ra
-    lw t0, 4(sp)                   # Restore t0
-    lw t1, 8(sp)                   # Restore t1
-    lw t2, 12(sp)                  # Restore t2
-    lw a0, 16(sp)                  # Restore a0
-    lw a1, 20(sp)                  # Restore a1
-    lw a7, 24(sp)                  # Restore a7
-    addi sp, sp, 32                # Restore stack pointer
-    mret                           # Return to user mode
+    lw ra, 0(sp)                  # Restore ra
+    lw t0, 4(sp)                  # Restore t0
+    lw t1, 8(sp)                  # Restore t1
+    lw t2, 12(sp)                 # Restore t2
+    lw a0, 16(sp)                 # Restore a0
+    lw a1, 20(sp)                 # Restore a1
+    lw a7, 24(sp)                 # Restore a7
+    addi sp, sp, 32               # Restore stack pointer
+    mret                          # Return to user mode
